@@ -1,0 +1,135 @@
+/*
+ * UNCLASSIFIED
+ *
+ * Copyright 2020 Northrop Grumman Systems Corporation
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of
+ * this software and associated documentation files (the "Software"), to deal in
+ * the Software without restriction, including without limitation the rights to use,
+ * copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the
+ * Software, and to permit persons to whom the Software is furnished to do so,
+ * subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED,
+ * INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A
+ * PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT
+ * HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
+ * OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
+ * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ */
+buildscript {
+    ext {
+        versionsFile = file('../versions.gradle')
+    }
+    apply from: versionsFile, to: project
+
+    repositories {
+        mavenLocal()
+        maven {
+            url = uri("https://maven.pkg.github.com/northropgrumman/packages")
+            credentials {
+                username = project.findProperty("gpr.user") ?: System.getenv("GITHUB_USERNAME")
+                password = project.findProperty("gpr.key") ?: System.getenv("GITHUB_TOKEN")
+            }
+        }
+        mavenCentral()
+		maven {
+            url "https://plugins.gradle.org/m2/"
+        }
+    }
+
+    dependencies {
+        classpath "com.ngc.seaside:gradle.plugins:$seasidePluginsVersion"
+        classpath "org.sonarsource.scanner.gradle:sonarqube-gradle-plugin:$sonarqubePluginVersion"
+    }
+}
+
+apply plugin: 'base'
+apply plugin: 'com.ngc.seaside.eclipse.base'
+
+eclipseDistribution {
+    linuxVersion = 'eclipse-dsl-photon-R-linux-gtk-x86_64'
+	windowsVersion = 'eclipse-dsl-photon-R-win32-x86_64'
+    linuxDownloadUrl = "https://mirror.umd.edu/eclipse/technology/epp/downloads/release/photon/R/eclipse-dsl-photon-R-linux-gtk-x86_64.tar.gz"
+    windowsDownloadUrl = "https://ftp.osuosl.org/pub/eclipse/technology/epp/downloads/release/photon/R/eclipse-dsl-photon-R-win32-x86_64.zip"
+    enablePluginsRepository()
+}
+
+configurations {
+  cache
+}
+
+dependencies {
+    cache "ch.qos.logback:logback-core:1.1.7"
+    cache "com.google.code.gson:gson:2.8.2"
+    cache "com.google.guava:guava:15.0"
+    cache "com.google.guava:guava:26.0-jre"
+    cache "com.google.inject.extensions:guice-multibindings:4.1.0"
+    cache "com.google.inject:guice:4.1.0"
+    cache "com.vladsch.flexmark:flexmark-all:0.34.2"
+    cache "commons-io:commons-io:2.5"
+    cache "commons-lang:commons-lang:2.6"
+    cache "gradle.plugin.nl.javadude.gradle.plugins:license-gradle-plugin:0.14.0"
+    cache "io.cucumber:gherkin:5.0.0"
+    cache "javax.activation:activation:1.1.1"
+    cache "javax.measure:unit-api:1.0"
+    cache "javax.xml.bind:jaxb-api:2.3.0"
+    cache "junit:junit:4.12"
+    cache "org.apache.commons:commons-lang3:3.5"
+    cache "org.apache.logging.log4j:log4j-api:2.14.0"
+    cache "org.apache.logging.log4j:log4j-core:2.14.0"
+    cache "org.apache.maven.resolver:maven-resolver-impl:1.1.0"
+    cache "org.apache.maven.resolver:maven-resolver-transport-file:1.1.0"
+    cache "org.apache.maven.resolver:maven-resolver-transport-http:1.1.0"
+    cache "org.apache.maven:maven-model:3.5.2"
+    cache "org.apache.maven:maven-resolver-provider:3.5.2"
+    cache "org.apache.maven:maven-settings-builder:3.5.2"
+    cache "org.apache.servicemix.bundles:org.apache.servicemix.bundles.aopalliance:1.0_6"
+    cache "org.apache.servicemix.bundles:org.apache.servicemix.bundles.javax-inject:1_2"
+    cache "org.apache.velocity:velocity-engine-core:2.0"
+    cache "org.eclipse.aether:aether-connector-basic:1.1.0"
+    cache "org.eclipse.emf:org.eclipse.emf.mwe2.launch:2.9.1.201705291010"
+    cache "org.eclipse.xtext:org.eclipse.xtext.common.types:2.14.0"
+    cache "org.eclipse.xtext:org.eclipse.xtext.ide:2.14.0"
+    cache "org.eclipse.xtext:org.eclipse.xtext.xbase:2.14.0"
+    cache "org.eclipse.xtext:org.eclipse.xtext.xtext.generator:2.14.0"
+    cache "org.eclipse.xtext:org.eclipse.xtext:2.14.0"
+    cache "org.glassfish.jaxb:jaxb-runtime:2.3.0"
+    cache "org.glassfish:javax.json:1.1"
+    cache "org.mockito:mockito-core:2.19.0"
+    cache "org.osgi:osgi.core:6.0.0"
+    cache "org.osgi:osgi.enterprise:6.0.0"
+    cache "org.sonarsource.scanner.gradle:sonarqube-gradle-plugin:2.5"
+    cache "org.sonarsource.sonarqube:sonar-plugin-api:6.7"
+    cache "systems.uom:systems-common-java8:0.9"
+    cache "systems.uom:systems-quantity:0.9"
+    cache "systems.uom:systems-unicode-java8:0.9"
+}
+
+task populateCache {
+    dependsOn configurations.cache
+}
+
+task prepare(type: Copy) {
+    from '../versions.gradle'
+    from '../gradlew'
+    from('../gradle/') { into 'gradle/' }
+    into project.buildDir
+
+}
+
+task untarEclipse(type: Copy) {
+    dependsOn downloadEclipse
+    from { tarTree(resources.gzip(eclipseDistribution.archive)) }
+    into eclipseDistribution.distributionDirectory
+    eachFile { file ->
+        if (file.name == 'eclipse') {
+            file.mode = 493
+        }
+    }
+}
+
+build.dependsOn(populateCache, untarEclipse)
