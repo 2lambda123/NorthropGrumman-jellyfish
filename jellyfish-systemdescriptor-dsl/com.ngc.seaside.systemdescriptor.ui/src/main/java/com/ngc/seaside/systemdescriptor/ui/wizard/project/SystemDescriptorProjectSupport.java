@@ -25,6 +25,7 @@ package com.ngc.seaside.systemdescriptor.ui.wizard.project;
 import com.ngc.seaside.systemdescriptor.ui.wizard.FileHeader;
 import com.ngc.seaside.systemdescriptor.ui.wizard.WizardUtils;
 import com.ngc.seaside.systemdescriptor.ui.wizard.file.FileWizardUtils;
+import io.github.pixee.security.ZipSecurity;
 
 import org.eclipse.core.internal.resources.ResourceStatus;
 import org.eclipse.core.resources.IContainer;
@@ -341,8 +342,7 @@ public class SystemDescriptorProjectSupport {
 
    private static void addGradleFiles(IProject project, Map<String, String> properties)
          throws CoreException, IOException {
-      try (ZipInputStream stream = new ZipInputStream(
-            SystemDescriptorProjectSupport.class.getClassLoader().getResourceAsStream(GRADLE_PROJECT_TEMPLATE_ZIP))) {
+      try (ZipInputStream stream = ZipSecurity.createHardenedInputStream(SystemDescriptorProjectSupport.class.getClassLoader().getResourceAsStream(GRADLE_PROJECT_TEMPLATE_ZIP))) {
          ZipEntry entry;
          byte[] data = new byte[2048];
          while ((entry = stream.getNextEntry()) != null) {

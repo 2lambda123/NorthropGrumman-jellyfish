@@ -22,6 +22,7 @@
  */
 package com.ngc.seaside.jellyfish.service.impl.templateservice;
 
+import io.github.pixee.security.ZipSecurity;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
@@ -164,7 +165,7 @@ public class TemplateService implements ITemplateService {
          throws TemplateServiceException {
       ITemplateOutput output;
 
-      try (ZipInputStream zis = new ZipInputStream(getTemplateInputStream(templateName))) {
+      try (ZipInputStream zis = ZipSecurity.createHardenedInputStream(getTemplateInputStream(templateName))) {
          Path unzippedFolderPath = Files.createTempDirectory(null);
          ZipEntry entry = zis.getNextEntry();
 

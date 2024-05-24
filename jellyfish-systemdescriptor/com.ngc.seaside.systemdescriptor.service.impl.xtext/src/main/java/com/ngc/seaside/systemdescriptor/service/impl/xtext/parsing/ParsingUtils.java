@@ -25,6 +25,7 @@ package com.ngc.seaside.systemdescriptor.service.impl.xtext.parsing;
 import com.google.common.base.Preconditions;
 import com.ngc.seaside.systemdescriptor.service.api.ParsingException;
 import com.ngc.seaside.systemdescriptor.service.repository.api.IRepositoryService;
+import io.github.pixee.security.ZipSecurity;
 
 import org.apache.maven.model.Dependency;
 import org.apache.maven.model.Model;
@@ -178,7 +179,7 @@ class ParsingUtils {
     */
    public static Collection<XtextResource> parseJar(Path jar, ParsingContext ctx) throws IOException {
       Collection<XtextResource> resources = new LinkedHashSet<>();
-      try (ZipInputStream zis = new ZipInputStream(Files.newInputStream(jar))) {
+      try (ZipInputStream zis = ZipSecurity.createHardenedInputStream(Files.newInputStream(jar))) {
          ZipEntry entry;
          while ((entry = zis.getNextEntry()) != null) {
             if (entry.getName().endsWith(".sd")) {
