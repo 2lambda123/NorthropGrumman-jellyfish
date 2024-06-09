@@ -27,6 +27,7 @@ import com.google.inject.Module;
 
 import com.ngc.seaside.jellyfish.DefaultJellyfishModule;
 import com.ngc.seaside.systemdescriptor.service.impl.xtext.module.XTextSystemDescriptorServiceModule;
+import io.github.pixee.security.BoundedLineReader;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -94,13 +95,13 @@ public class JellyfishSonarqubePluginModule extends DefaultJellyfishModule {
          Preconditions.checkState(is != null,
                                   "failed to load file guice-modules from classpath!");
          try (BufferedReader br = new BufferedReader(new InputStreamReader(is))) {
-            String line = br.readLine();
+            String line = BoundedLineReader.readLine(br, 5_000_000);
             while (line != null) {
                Module m = (Module) JellyfishSonarqubePluginModule.class.getClassLoader().loadClass(line).newInstance();
                if (m.getClass() != XTextSystemDescriptorServiceModule.class) {
                   modules.add(m);
                }
-               line = br.readLine();
+               line = BoundedLineReader.readLine(br, 5_000_000);
             }
          } catch (IOException | ClassNotFoundException | InstantiationException | IllegalAccessException e) {
             throw new RuntimeException("failed to create instance of a required Guice module!", e);

@@ -22,6 +22,7 @@
  */
 package com.ngc.seaside.jellyfish.examples.tasks;
 
+import io.github.pixee.security.BoundedLineReader;
 import org.apache.commons.io.FileUtils;
 import org.gradle.api.DefaultTask;
 import org.gradle.api.tasks.TaskAction;
@@ -241,8 +242,8 @@ public class RegressionDiffTask extends DefaultTask {
          String expectedFileLine;
          String generatedFileLine;
          int lineNum = 0;
-         while ((expectedFileLine = expectedBr.readLine()) != null
-                && (generatedFileLine = generatedBr.readLine()) != null) {
+         while ((expectedFileLine = BoundedLineReader.readLine(expectedBr, 5_000_000)) != null
+                && (generatedFileLine = BoundedLineReader.readLine(generatedBr, 5_000_000)) != null) {
             lineNum++;
 
             if (!expectedFileLine.equals(generatedFileLine)) {
