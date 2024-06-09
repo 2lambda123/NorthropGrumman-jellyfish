@@ -25,6 +25,7 @@ package com.ngc.seaside.systemdescriptor.ui.dynamic;
 import com.google.inject.Module;
 
 import com.ngc.seaside.systemdescriptor.ui.internal.SystemdescriptorActivator;
+import io.github.pixee.security.BoundedLineReader;
 
 import org.apache.log4j.Logger;
 import org.osgi.framework.Bundle;
@@ -102,7 +103,7 @@ public class DynamicModuleLoader {
          // may not return until the bundle is actually activated (see the OSGi API JavaDoc).
          bundle.start();
 
-         String line = in.readLine();
+         String line = BoundedLineReader.readLine(in, 5_000_000);
          while (line != null) {
             // Skip comments.
             if (!line.startsWith("#") && !line.trim().isEmpty()) {
@@ -124,7 +125,7 @@ public class DynamicModuleLoader {
                                e);
                }
             }
-            line = in.readLine();
+            line = BoundedLineReader.readLine(in, 5_000_000);
          }
       } catch (IOException | BundleException e) {
          LOGGER.error(String.format(
